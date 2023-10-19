@@ -1,3 +1,12 @@
 ﻿.react-pdf__Page {
   max-width: min-content;
 }
+.react-pdf__Page__textContent,
+.textLayer {
+  display: none;
+}
+
+.MuiPaper-elevation1,
+.MuiPaper-rounded {
+  width: 12rem;
+}
