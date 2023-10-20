@@ -57,9 +57,15 @@ const PdfViewer = () => {
   const [pageNumber, setPageNumber] = useState(1);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [showFileUploader, setShowFileUploader] = useState(true);
-  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [selectedDocument, setSelectedDocument] = useState(null); // Nuevo estado para rastrear el documento seleccionado
+  const [documentNames, setDocumentNames] = useState([]); // Estado para almacenar los nombres de los documentos
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  // Función para manejar la selección de un documento
+  const handleDocumentSelect = (documentIndex) => {
+    setSelectedDocument(documentIndex);
+  };
 
   const handlePreviousPage = () => {
     if (pageNumber > 1) {
@@ -77,8 +83,8 @@ const PdfViewer = () => {
     setSelectedFiles(Array.from(files));
     setShowFileUploader(false);
     setCurrentFileIndex(0);
-    setSelectedDocument(null);
 
+    // Obtener el número de páginas de cada archivo y almacenarlos en numPages
     const pagesPromises = Array.from(files).map((file) => {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -96,6 +102,10 @@ const PdfViewer = () => {
       });
     });
 
+    // Obtener los nombres de los documentos y almacenarlos en documentNames
+    const names = Array.from(files).map((file) => file.name);
+    setDocumentNames(names);
+
     Promise.all(pagesPromises).then((pages) => {
       setNumPages(pages);
     });
@@ -104,16 +114,12 @@ const PdfViewer = () => {
   const handleBackToUploader = () => {
     setSelectedFiles([]);
     setShowFileUploader(true);
-    setSelectedDocument(null);
+    setSelectedDocument(null); // Reiniciar el documento seleccionado
   };
 
   const handleThumbnailClick = (page) => {
     setPageNumber(page);
     setCurrentFileIndex(selectedDocument); // Asegura que el índice del archivo seleccionado sea el índice actual
-  };
-
-  const handleDocumentSelect = (documentIndex) => {
-    setSelectedDocument(documentIndex);
   };
 
   return (
@@ -161,6 +167,9 @@ const PdfViewer = () => {
                 <List>
                   {selectedFiles.map((file, index) => {
                     const isSelected = selectedDocument === index;
+                    const documentName = documentNames[index];
+
+                    // Renderizar el botón del documento
                     const documentButton = (
                       <ListItem
                         key={index}
@@ -170,40 +179,34 @@ const PdfViewer = () => {
                           classes.documentButton
                         }`}
                       >
-                        <ListItemIcon>
-                          <ImageIcon />
-                        </ListItemIcon>
-                        <ListItemText primary={`Documento ${index + 1}`} />
+                        <ListItemText primary={documentName} />
                       </ListItem>
                     );
 
-                    if (isSelected) {
-                      const numPagesForFile = numPages[index];
-                      const thumbnailPromises = Array.from({ length: numPagesForFile }, (_, i) => (
-                        <ListItem
-                          key={i}
-                          button
-                          onClick={() => handleThumbnailClick(i + 1)} // Adjusted to the correct page number
-                          className={currentFileIndex === index ? classes.selectedThumbnail : null}
-                        >
-                          <ListItemIcon>
-                            <Document file={file}>
-                              <Page
-                                pageNumber={i + 1}
-                                width={150}
-                                renderTextLayer={!isMobile}
-                                renderAnnotationLayer={false}
-                                style={{ maxWidth: 'min-content' }}
-                              />
-                            </Document>
-                          </ListItemIcon>
-                        </ListItem>
-                      ));
+                    // Renderizar las miniaturas solo si este documento está seleccionado
+                    const numPagesForFile = numPages[index];
+                    const thumbnailPromises = Array.from({ length: numPagesForFile }, (_, i) => (
+                      <ListItem
+                        key={i}
+                        button
+                        onClick={() => handleThumbnailClick(i + 1)}
+                        className={currentFileIndex === index ? classes.selectedThumbnail : null}
+                      >
+                        <ListItemIcon>
+                          <Document file={file}>
+                            <Page
+                              pageNumber={i + 1}
+                              width={150}
+                              renderTextLayer={!isMobile}
+                              renderAnnotationLayer={false}
+                              style={{ maxWidth: 'min-content' }}
+                            />
+                          </Document>
+                        </ListItemIcon>
+                      </ListItem>
+                    ));
 
-                      return [documentButton, ...thumbnailPromises];
-                    }
-
-                    return documentButton;
+                    return isSelected ? [documentButton, ...thumbnailPromises] : documentButton;
                   })}
                 </List>
               </Paper>
