@@ -7,6 +7,7 @@ import {
   List,
   ListItem,
   ListItemIcon,
+  ListItemText,
   IconButton,
   useMediaQuery,
   useTheme,
@@ -43,6 +44,10 @@ const useStyles = makeStyles((theme) => ({
   selectedThumbnail: {
     border: `2px solid ${theme.palette.primary.main}`,
   },
+  documentButton: {
+    cursor: 'pointer',
+    marginBottom: '5px',
+  },
 }));
 
 const PdfViewer = () => {
@@ -52,6 +57,7 @@ const PdfViewer = () => {
   const [pageNumber, setPageNumber] = useState(1);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [showFileUploader, setShowFileUploader] = useState(true);
+  const [selectedDocument, setSelectedDocument] = useState(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -71,8 +77,8 @@ const PdfViewer = () => {
     setSelectedFiles(Array.from(files));
     setShowFileUploader(false);
     setCurrentFileIndex(0);
+    setSelectedDocument(null);
 
-    // Obtener el número de páginas de cada archivo y almacenarlos en numPages
     const pagesPromises = Array.from(files).map((file) => {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -98,10 +104,16 @@ const PdfViewer = () => {
   const handleBackToUploader = () => {
     setSelectedFiles([]);
     setShowFileUploader(true);
+    setSelectedDocument(null);
   };
 
   const handleThumbnailClick = (page) => {
     setPageNumber(page);
+    setCurrentFileIndex(selectedDocument); // Asegura que el índice del archivo seleccionado sea el índice actual
+  };
+
+  const handleDocumentSelect = (documentIndex) => {
+    setSelectedDocument(documentIndex);
   };
 
   return (
@@ -148,16 +160,30 @@ const PdfViewer = () => {
               <Paper style={{ maxHeight: '70vh', overflowY: 'auto' }}>
                 <List>
                   {selectedFiles.map((file, index) => {
-                    const numPagesForFile = numPages[index];
-                    const thumbnailPromises = Array.from({ length: numPagesForFile }, (_, i) => {
-                      return (
+                    const isSelected = selectedDocument === index;
+                    const documentButton = (
+                      <ListItem
+                        key={index}
+                        button
+                        onClick={() => handleDocumentSelect(index)}
+                        className={`${isSelected ? classes.selectedThumbnail : ''} ${
+                          classes.documentButton
+                        }`}
+                      >
+                        <ListItemIcon>
+                          <ImageIcon />
+                        </ListItemIcon>
+                        <ListItemText primary={`Documento ${index + 1}`} />
+                      </ListItem>
+                    );
+
+                    if (isSelected) {
+                      const numPagesForFile = numPages[index];
+                      const thumbnailPromises = Array.from({ length: numPagesForFile }, (_, i) => (
                         <ListItem
                           key={i}
                           button
-                          onClick={() => {
-                            setCurrentFileIndex(index);
-                            setPageNumber(i + 1);
-                          }}
+                          onClick={() => handleThumbnailClick(i + 1)} // Adjusted to the correct page number
                           className={currentFileIndex === index ? classes.selectedThumbnail : null}
                         >
                           <ListItemIcon>
@@ -172,9 +198,12 @@ const PdfViewer = () => {
                             </Document>
                           </ListItemIcon>
                         </ListItem>
-                      );
-                    });
-                    return thumbnailPromises;
+                      ));
+
+                      return [documentButton, ...thumbnailPromises];
+                    }
+
+                    return documentButton;
                   })}
                 </List>
               </Paper>
