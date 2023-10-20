@@ -8,5 +8,19 @@
 
 .MuiPaper-elevation1,
 .MuiPaper-rounded {
-  width: 12rem;
+  max-width: min-content;
+}
+
+/* Estilo CSS para dispositivos con un ancho de pantalla de 1370px o menos */
+@media (max-width: 1370px) {
+  .MuiGrid-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  .MuiPaper-elevation1,
+  .MuiPaper-rounded {
+    margin-top: 20px;
+  }
 }

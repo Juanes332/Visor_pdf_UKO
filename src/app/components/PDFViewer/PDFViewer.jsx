@@ -28,11 +28,6 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'center',
     minHeight: '100vh',
     overflow: 'hidden',
-    [theme.breakpoints.down(1355)]: {
-      '& .miniatures': {
-        display: 'none',
-      },
-    },
   },
   pdfViewer: {
     flex: 1,
@@ -92,7 +87,7 @@ const PdfViewer = () => {
   };
 
   return (
-    <Container maxWidth="lg" className={classes.container}>
+    <Container maxWidth="lg" className={`pdfContainer`}>
       {showFileUploader ? (
         <FileUploader onFileSelected={handleFileSelected} />
       ) : (
@@ -103,7 +98,7 @@ const PdfViewer = () => {
                 <Page
                   pageNumber={pageNumber}
                   width={isMobile ? 300 : 800}
-                  renderTextLayer={!isMobile} // Renderizar la capa de texto solo en dispositivos no móviles
+                  renderTextLayer={!isMobile}
                   renderAnnotationLayer={false}
                   style={{ maxWidth: 'min-content' }}
                 />
@@ -118,34 +113,36 @@ const PdfViewer = () => {
               </IconButton>
             </div>
           </Grid>
-          <Grid item xs={12} sm={3} className={classes.miniatures}>
-            <Paper style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-              <List>
-                {Array.from({ length: numPages }, (_, i) => (
-                  <ListItem
-                    key={i}
-                    button
-                    onClick={() => handleThumbnailClick(i + 1)}
-                    className={pageNumber === i + 1 ? classes.selectedThumbnail : null}
-                  >
-                    <ListItemIcon>
-                      {selectedFile && (
-                        <Document file={selectedFile}>
-                          <Page
-                            pageNumber={i + 1}
-                            width={150}
-                            renderTextLayer={!isMobile} // Renderizar la capa de texto solo en dispositivos no móviles
-                            renderAnnotationLayer={false}
-                            style={{ maxWidth: 'min-content' }}
-                          />
-                        </Document>
-                      )}
-                    </ListItemIcon>
-                  </ListItem>
-                ))}
-              </List>
-            </Paper>
-          </Grid>
+          {selectedFile && (
+            <Grid item xs={12} sm={3} className={`miniatures ${classes.miniatures}`}>
+              <Paper style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                <List>
+                  {Array.from({ length: numPages }, (_, i) => (
+                    <ListItem
+                      key={i}
+                      button
+                      onClick={() => handleThumbnailClick(i + 1)}
+                      className={pageNumber === i + 1 ? classes.selectedThumbnail : null}
+                    >
+                      <ListItemIcon>
+                        {selectedFile && (
+                          <Document file={selectedFile}>
+                            <Page
+                              pageNumber={i + 1}
+                              width={150}
+                              renderTextLayer={!isMobile}
+                              renderAnnotationLayer={false}
+                              style={{ maxWidth: 'min-content' }}
+                            />
+                          </Document>
+                        )}
+                      </ListItemIcon>
+                    </ListItem>
+                  ))}
+                </List>
+              </Paper>
+            </Grid>
+          )}
         </Grid>
       )}
       {selectedFile && (
