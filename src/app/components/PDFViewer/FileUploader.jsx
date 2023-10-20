@@ -1,19 +1,20 @@
-﻿import React, { useState, useRef } from 'react';
+﻿// Componente de cargue de archivos (FileUploader.js)
+import React, { useState, useRef } from 'react';
 import { Button } from '@material-ui/core';
 
-const FileUploader = ({ onFileSelected }) => {
+const FileUploader = ({ onFilesSelected }) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    onFileSelected(file);
+    const files = e.target.files;
+    onFilesSelected(files);
   };
 
   const handleFileDrop = (e) => {
     e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    onFileSelected(file);
+    const files = e.dataTransfer.files;
+    onFilesSelected(files);
     setIsDragging(false);
   };
 
@@ -48,14 +49,15 @@ const FileUploader = ({ onFileSelected }) => {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
     >
-      <div style={{ marginBottom: '10px' }}>Arrastra y suelta un archivo PDF aquí</div>
+      <div style={{ marginBottom: '10px' }}>Arrastra y suelta archivos PDF aquí</div>
       <div style={{ marginBottom: '10px' }}>o</div>
       <Button variant="contained" style={{ backgroundColor: '#ff9e43' }} onClick={openFileDialog}>
-        Selecciona un archivo
+        Selecciona archivos
       </Button>
       <input
         type="file"
         accept=".pdf"
+        multiple
         onChange={handleFileChange}
         ref={fileInputRef}
         style={{ display: 'none' }}

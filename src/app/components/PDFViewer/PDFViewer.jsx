@@ -1,4 +1,5 @@
-﻿import React, { useState } from 'react';
+﻿// Componente de visualización de PDF (PdfViewer.js)
+import React, { useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import {
   Container,
@@ -47,9 +48,10 @@ const useStyles = makeStyles((theme) => ({
 
 const PdfViewer = () => {
   const classes = useStyles();
+  const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [numPages, setNumPages] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [showFileUploader, setShowFileUploader] = useState(true);
   const [thumbnails, setThumbnails] = useState([]);
   const theme = useTheme();
@@ -71,14 +73,14 @@ const PdfViewer = () => {
     }
   };
 
-  const handleFileSelected = (file) => {
-    setSelectedFile(file);
+  const handleFilesSelected = (files) => {
+    setSelectedFiles(Array.from(files));
     setShowFileUploader(false);
-    setPageNumber(1);
+    setCurrentFileIndex(0);
   };
 
   const handleBackToUploader = () => {
-    setSelectedFile(null);
+    setSelectedFiles([]);
     setShowFileUploader(true);
   };
 
@@ -89,12 +91,15 @@ const PdfViewer = () => {
   return (
     <Container maxWidth="lg" className={`pdfContainer`}>
       {showFileUploader ? (
-        <FileUploader onFileSelected={handleFileSelected} />
+        <FileUploader onFilesSelected={handleFilesSelected} />
       ) : (
         <Grid container spacing={2} className={classes.pdfViewer}>
           <Grid item xs={12} sm={9}>
-            {selectedFile && (
-              <Document file={selectedFile} onLoadSuccess={onDocumentLoadSuccess}>
+            {selectedFiles.length > 0 && (
+              <Document
+                file={selectedFiles[currentFileIndex]}
+                onLoadSuccess={onDocumentLoadSuccess}
+              >
                 <Page
                   pageNumber={pageNumber}
                   width={isMobile ? 300 : 800}
@@ -113,29 +118,30 @@ const PdfViewer = () => {
               </IconButton>
             </div>
           </Grid>
-          {selectedFile && (
+          {selectedFiles.length > 0 && (
             <Grid item xs={12} sm={3} className={`miniatures ${classes.miniatures}`}>
               <Paper style={{ maxHeight: '70vh', overflowY: 'auto' }}>
                 <List>
-                  {Array.from({ length: numPages }, (_, i) => (
+                  {selectedFiles.map((file, index) => (
                     <ListItem
-                      key={i}
+                      key={index}
                       button
-                      onClick={() => handleThumbnailClick(i + 1)}
-                      className={pageNumber === i + 1 ? classes.selectedThumbnail : null}
+                      onClick={() => {
+                        setCurrentFileIndex(index);
+                        setPageNumber(1);
+                      }}
+                      className={currentFileIndex === index ? classes.selectedThumbnail : null}
                     >
                       <ListItemIcon>
-                        {selectedFile && (
-                          <Document file={selectedFile}>
-                            <Page
-                              pageNumber={i + 1}
-                              width={150}
-                              renderTextLayer={!isMobile}
-                              renderAnnotationLayer={false}
-                              style={{ maxWidth: 'min-content' }}
-                            />
-                          </Document>
-                        )}
+                        <Document file={file}>
+                          <Page
+                            pageNumber={1}
+                            width={150}
+                            renderTextLayer={!isMobile}
+                            renderAnnotationLayer={false}
+                            style={{ maxWidth: 'min-content' }}
+                          />
+                        </Document>
                       </ListItemIcon>
                     </ListItem>
                   ))}
@@ -145,12 +151,12 @@ const PdfViewer = () => {
           )}
         </Grid>
       )}
-      {selectedFile && (
+      {selectedFiles.length > 0 && (
         <IconButton
           onClick={handleBackToUploader}
           style={{ position: 'absolute', top: '10px', left: '10px' }}
         >
-          <ChevronLeftIcon /> Volver a seleccionar archivo
+          <ChevronLeftIcon /> Volver a seleccionar archivos
         </IconButton>
       )}
     </Container>
