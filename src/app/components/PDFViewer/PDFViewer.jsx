@@ -13,7 +13,6 @@ import {
   useTheme,
   makeStyles,
 } from '@material-ui/core';
-import ImageIcon from '@material-ui/icons/Image';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import FileUploader from './FileUploader';
@@ -41,12 +40,14 @@ const useStyles = makeStyles((theme) => ({
     width: '100%',
     cursor: 'pointer',
   },
-  selectedThumbnail: {
-    border: `2px solid ${theme.palette.primary.main}`,
-  },
   documentButton: {
     cursor: 'pointer',
     marginBottom: '5px',
+  },
+  thumbnailStyle: {
+    margin: '5px 0',
+    borderRadius: '5px',
+    boxShadow: '0 3px 6px rgba(0, 0, 0, 0.1)',
   },
 }));
 
@@ -57,12 +58,11 @@ const PdfViewer = () => {
   const [pageNumber, setPageNumber] = useState(1);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [showFileUploader, setShowFileUploader] = useState(true);
-  const [selectedDocument, setSelectedDocument] = useState(null); // Nuevo estado para rastrear el documento seleccionado
-  const [documentNames, setDocumentNames] = useState([]); // Estado para almacenar los nombres de los documentos
+  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [documentNames, setDocumentNames] = useState([]);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Función para manejar la selección de un documento
   const handleDocumentSelect = (documentIndex) => {
     setSelectedDocument(documentIndex);
   };
@@ -84,7 +84,6 @@ const PdfViewer = () => {
     setShowFileUploader(false);
     setCurrentFileIndex(0);
 
-    // Obtener el número de páginas de cada archivo y almacenarlos en numPages
     const pagesPromises = Array.from(files).map((file) => {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -102,7 +101,6 @@ const PdfViewer = () => {
       });
     });
 
-    // Obtener los nombres de los documentos y almacenarlos en documentNames
     const names = Array.from(files).map((file) => file.name);
     setDocumentNames(names);
 
@@ -114,12 +112,12 @@ const PdfViewer = () => {
   const handleBackToUploader = () => {
     setSelectedFiles([]);
     setShowFileUploader(true);
-    setSelectedDocument(null); // Reiniciar el documento seleccionado
+    setSelectedDocument(null);
   };
 
   const handleThumbnailClick = (page) => {
     setPageNumber(page);
-    setCurrentFileIndex(selectedDocument); // Asegura que el índice del archivo seleccionado sea el índice actual
+    setCurrentFileIndex(selectedDocument);
   };
 
   return (
@@ -169,34 +167,30 @@ const PdfViewer = () => {
                     const isSelected = selectedDocument === index;
                     const documentName = documentNames[index];
 
-                    // Renderizar el botón del documento
                     const documentButton = (
                       <ListItem
                         key={index}
                         button
                         onClick={() => handleDocumentSelect(index)}
-                        className={`${isSelected ? classes.selectedThumbnail : ''} ${
-                          classes.documentButton
-                        }`}
+                        className={classes.documentButton}
                       >
                         <ListItemText primary={documentName} />
                       </ListItem>
                     );
 
-                    // Renderizar las miniaturas solo si este documento está seleccionado
                     const numPagesForFile = numPages[index];
                     const thumbnailPromises = Array.from({ length: numPagesForFile }, (_, i) => (
                       <ListItem
                         key={i}
                         button
                         onClick={() => handleThumbnailClick(i + 1)}
-                        className={currentFileIndex === index ? classes.selectedThumbnail : null}
+                        className={classes.thumbnailStyle}
                       >
                         <ListItemIcon>
                           <Document file={file}>
                             <Page
                               pageNumber={i + 1}
-                              width={150}
+                              width={170}
                               renderTextLayer={!isMobile}
                               renderAnnotationLayer={false}
                               style={{ maxWidth: 'min-content' }}
