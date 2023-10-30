@@ -4,14 +4,20 @@ import Alert from '@mui/material/Alert';
 
 const FileUploader = ({ onFilesSelected }) => {
   const [isDragging, setIsDragging] = useState(false);
-  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleFileValidation = (files) => {
     for (let i = 0; i < files.length; i++) {
+      if (files[i].type !== 'application/pdf') {
+        // Verificar si el archivo NO es de tipo PDF
+        setSnackbarMessage('Solo se permiten archivos PDF.');
+        fileInputRef.current.value = ''; // Reseteamos el valor del input
+        return;
+      }
       if (files[i].size > 10 * 1024 * 1024) {
         // 10MB en bytes
-        setOpenSnackbar(true);
+        setSnackbarMessage('No se pueden subir archivos mayores a 10MB.');
         fileInputRef.current.value = ''; // Reseteamos el valor del input
         return;
       }
@@ -77,13 +83,16 @@ const FileUploader = ({ onFilesSelected }) => {
         style={{ display: 'none' }}
       />
       <Snackbar
-        open={openSnackbar}
+        open={!!snackbarMessage}
         autoHideDuration={6000}
-        onClose={() => setOpenSnackbar(false)}
+        onClose={() => setSnackbarMessage(null)}
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
-        <Alert onClose={() => setOpenSnackbar(false)} severity="error">
-          No se pueden subir archivos mayores a 10MB.
+        <Alert
+          onClose={() => setSnackbarMessage(null)}
+          severity={snackbarMessage === 'Solo se permiten archivos PDF.' ? 'warning' : 'error'}
+        >
+          {snackbarMessage}
         </Alert>
       </Snackbar>
     </div>
