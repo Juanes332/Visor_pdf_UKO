@@ -6,7 +6,29 @@ const defaultPosition = {
   height: 50,
 };
 
-const SignatureField = ({ onRemove, initialPosition, onPositionChange }) => {
+// Función para generar un color aleatorio
+function getRandomColor() {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
+const SignatureField = ({ onRemove, initialPosition, onPositionChange, backgroundColor }) => {
+  // Utilizamos el backgroundColor que pasas como prop al estilo del div.
+  const fieldStyle = {
+    border: '1px solid black',
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    backgroundColor: backgroundColor, // Añadido aquí
+  };
+
   return (
     <Rnd
       default={{
@@ -14,24 +36,14 @@ const SignatureField = ({ onRemove, initialPosition, onPositionChange }) => {
         x: initialPosition.x,
         y: initialPosition.y,
       }}
-      bounds="parent"
+      bounds=".documentContainer"
       onDragStop={(e, d) => {
         if (onPositionChange) {
           onPositionChange(d.x, d.y);
         }
       }}
     >
-      <div
-        style={{
-          border: '1px solid black',
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          position: 'relative',
-        }}
-      >
+      <div style={fieldStyle}>
         <span>Signature</span>
         <button
           style={{

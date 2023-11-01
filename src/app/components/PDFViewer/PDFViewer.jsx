@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -21,6 +21,15 @@ import FileUploader from './FileUploader';
 import SignatureField from './SignatureField';
 
 import './pdf.css';
+
+function getRandomColor() {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
@@ -76,6 +85,7 @@ const PdfViewer = () => {
   const [showSignatureField, setShowSignatureField] = useState(false);
   const [signatureFields, setSignatureFields] = useState([]);
   const [documentNames, setDocumentNames] = useState([]);
+  const documentContainerRef = useRef(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -127,6 +137,7 @@ const PdfViewer = () => {
 
   const handleBackToUploader = () => {
     setSelectedFiles([]);
+    setSignatureFields([]); // Esto limpiará los campos de firma
     setShowFileUploader(true);
     setSelectedDocument(null);
   };
@@ -142,8 +153,9 @@ const PdfViewer = () => {
       {
         id: uuidv4(),
         pageNumber: pageNumber,
-        x: 0, // posición inicial en x
-        y: 0, // posición inicial en y
+        x: 0,
+        y: 0,
+        backgroundColor: getRandomColor(), // añadir esto
       },
     ]);
   };
@@ -176,6 +188,7 @@ const PdfViewer = () => {
           <Grid item xs={12} sm={9}>
             {selectedFiles.length > 0 && (
               <Document
+                ref={documentContainerRef}
                 file={selectedFiles[currentFileIndex]}
                 onLoadSuccess={({ numPages }) => {
                   setNumPages((prevPages) => {
@@ -184,6 +197,7 @@ const PdfViewer = () => {
                     return updatedPages;
                   });
                 }}
+                className="documentContainer"
               >
                 <Page
                   pageNumber={pageNumber}
@@ -279,6 +293,7 @@ const PdfViewer = () => {
             initialPosition={{ x: field.x, y: field.y }}
             onRemove={() => handleRemoveSignatureField(field.id)}
             onPositionChange={(x, y) => handlePositionChange(field.id, x, y)}
+            backgroundColor={field.backgroundColor} // añadir esto
           />
         ))}
     </Container>
