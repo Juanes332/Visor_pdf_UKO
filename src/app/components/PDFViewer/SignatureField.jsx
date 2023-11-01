@@ -1,5 +1,7 @@
-﻿import React from 'react';
+﻿// SignatureField.js
+import React, { useState } from 'react';
 import { Rnd } from 'react-rnd';
+import SignatureModal from './SignatureModal'; // Asegúrate de importar el componente
 
 const defaultPosition = {
   width: 200,
@@ -17,7 +19,13 @@ function getRandomColor() {
 }
 
 const SignatureField = ({ onRemove, initialPosition, onPositionChange, backgroundColor }) => {
-  // Utilizamos el backgroundColor que pasas como prop al estilo del div.
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [signatureImage, setSignatureImage] = useState(null);
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+  const saveSignature = (signature) => setSignatureImage(signature);
+
   const fieldStyle = {
     border: '1px solid black',
     width: '100%',
@@ -26,7 +34,9 @@ const SignatureField = ({ onRemove, initialPosition, onPositionChange, backgroun
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-    backgroundColor: backgroundColor, // Añadido aquí
+    backgroundColor: backgroundColor,
+    backgroundImage: `url(${signatureImage})`, // Establecer la imagen de la firma como fondo
+    backgroundSize: 'cover',
   };
 
   return (
@@ -43,8 +53,8 @@ const SignatureField = ({ onRemove, initialPosition, onPositionChange, backgroun
         }
       }}
     >
-      <div style={fieldStyle}>
-        <span>Signature</span>
+      <div style={fieldStyle} onDoubleClick={openModal}>
+        {!signatureImage && <span>Signature</span>}
         <button
           style={{
             position: 'absolute',
@@ -60,6 +70,7 @@ const SignatureField = ({ onRemove, initialPosition, onPositionChange, backgroun
           X
         </button>
       </div>
+      <SignatureModal isOpen={isModalOpen} onClose={closeModal} onSave={saveSignature} />
     </Rnd>
   );
 };

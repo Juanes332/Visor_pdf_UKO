@@ -155,7 +155,8 @@ const PdfViewer = () => {
         pageNumber: pageNumber,
         x: 0,
         y: 0,
-        backgroundColor: getRandomColor(), // añadir esto
+        backgroundColor: getRandomColor(),
+        signature: null, // La firma inicialmente será null
       },
     ]);
   };
