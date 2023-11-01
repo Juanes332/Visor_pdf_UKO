@@ -35,11 +35,13 @@
     "react-pdf": "^7.5.0",
     "react-perfect-scrollbar": "^1.5.8",
     "react-redux": "^7.2.6",
+    "react-rnd": "^10.4.1",
     "react-router-dom": "^6.0.2",
     "react-scripts": "^4.0.3",
     "redux": "^4.1.2",
     "redux-thunk": "^2.4.0",
     "shortid": "^2.2.16",
+    "uuid": "^9.0.1",
     "yup": "^0.32.11"
   },
   "scripts": {

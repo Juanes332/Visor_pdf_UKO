@@ -1,5 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
+import { v4 as uuidv4 } from 'uuid';
 import {
   Container,
   Grid,
@@ -12,10 +13,12 @@ import {
   useMediaQuery,
   useTheme,
   makeStyles,
+  Button,
 } from '@material-ui/core';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import FileUploader from './FileUploader';
+import SignatureField from './SignatureField';
 
 import './pdf.css';
 
@@ -49,6 +52,17 @@ const useStyles = makeStyles((theme) => ({
     borderRadius: '5px',
     boxShadow: '0 3px 6px rgba(0, 0, 0, 0.1)',
   },
+  addButton: {
+    marginTop: theme.spacing(2),
+    backgroundColor: '#1976D2', // Color de fondo azul
+    color: 'white', // Texto blanco
+    padding: '5px 15px', // Aumentar el padding para hacerlo más rectangular
+    textTransform: 'none', // Evitar que el texto esté en mayúsculas
+    fontSize: '0.8rem', // Tamaño de texto reducido
+    '&:hover': {
+      backgroundColor: '#1565C0', // Oscurecer un poco el azul al pasar el ratón por encima
+    },
+  },
 }));
 
 const PdfViewer = () => {
@@ -59,6 +73,8 @@ const PdfViewer = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [showFileUploader, setShowFileUploader] = useState(true);
   const [selectedDocument, setSelectedDocument] = useState(null);
+  const [showSignatureField, setShowSignatureField] = useState(false);
+  const [signatureFields, setSignatureFields] = useState([]);
   const [documentNames, setDocumentNames] = useState([]);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -118,6 +134,37 @@ const PdfViewer = () => {
   const handleThumbnailClick = (page) => {
     setPageNumber(page);
     setCurrentFileIndex(selectedDocument);
+  };
+
+  const handleAddSignatureField = () => {
+    setSignatureFields((prevFields) => [
+      ...prevFields,
+      {
+        id: uuidv4(),
+        pageNumber: pageNumber,
+        x: 0, // posición inicial en x
+        y: 0, // posición inicial en y
+      },
+    ]);
+  };
+
+  // Función para manejar la eliminación de un campo de firma
+  const handleRemoveSignatureField = (idToRemove) => {
+    setSignatureFields(signatureFields.filter((field) => field.id !== idToRemove));
+  };
+
+  const handlePositionChange = (id, x, y) => {
+    setSignatureFields((prevFields) =>
+      prevFields.map((field) =>
+        field.id === id
+          ? {
+              ...field,
+              x: x,
+              y: y,
+            }
+          : field
+      )
+    );
   };
 
   return (
@@ -204,6 +251,13 @@ const PdfViewer = () => {
                   })}
                 </List>
               </Paper>
+              <Button
+                onClick={handleAddSignatureField}
+                variant="contained"
+                className={classes.addButton}
+              >
+                Agregar campo de firma
+              </Button>
             </Grid>
           )}
         </Grid>
@@ -216,6 +270,17 @@ const PdfViewer = () => {
           <ChevronLeftIcon /> Volver a seleccionar archivos
         </IconButton>
       )}
+      {/* Renderizar todos los campos de firma basados en el estado */}
+      {signatureFields
+        .filter((field) => field.pageNumber === pageNumber)
+        .map((field) => (
+          <SignatureField
+            key={field.id}
+            initialPosition={{ x: field.x, y: field.y }}
+            onRemove={() => handleRemoveSignatureField(field.id)}
+            onPositionChange={(x, y) => handlePositionChange(field.id, x, y)}
+          />
+        ))}
     </Container>
   );
 };
