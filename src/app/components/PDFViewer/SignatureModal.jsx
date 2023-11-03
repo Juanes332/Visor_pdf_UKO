@@ -1,5 +1,4 @@
-﻿// SignatureModal.js
-import React, { useRef } from 'react';
+﻿import React, { useRef } from 'react';
 import Modal from '@material-ui/core/Modal';
 import Button from '@material-ui/core/Button';
 import SignatureCanvas from 'react-signature-canvas';

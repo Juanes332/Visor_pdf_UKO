@@ -83,7 +83,7 @@ const PdfViewer = () => {
   const [showFileUploader, setShowFileUploader] = useState(true);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [showSignatureField, setShowSignatureField] = useState(false);
-  const [signatureFields, setSignatureFields] = useState([]);
+  const [signatureFields, setSignatureFields] = useState({});
   const [documentNames, setDocumentNames] = useState([]);
   const documentContainerRef = useRef(null);
   const theme = useTheme();
@@ -148,27 +148,35 @@ const PdfViewer = () => {
   };
 
   const handleAddSignatureField = () => {
-    setSignatureFields((prevFields) => [
+    const documentId = selectedFiles[currentFileIndex].name; // Usamos el nombre del archivo como ID
+    setSignatureFields((prevFields) => ({
       ...prevFields,
-      {
-        id: uuidv4(),
-        pageNumber: pageNumber,
-        x: 0,
-        y: 0,
-        backgroundColor: getRandomColor(),
-        signature: null, // La firma inicialmente será null
-      },
-    ]);
+      [documentId]: [
+        ...(prevFields[documentId] || []),
+        {
+          id: uuidv4(),
+          pageNumber: pageNumber,
+          x: 0,
+          y: 0,
+          backgroundColor: getRandomColor(),
+          signature: null,
+        },
+      ],
+    }));
   };
 
   // Función para manejar la eliminación de un campo de firma
-  const handleRemoveSignatureField = (idToRemove) => {
-    setSignatureFields(signatureFields.filter((field) => field.id !== idToRemove));
+  const handleRemoveSignatureField = (documentId, idToRemove) => {
+    setSignatureFields((prevFields) => ({
+      ...prevFields,
+      [documentId]: prevFields[documentId].filter((field) => field.id !== idToRemove),
+    }));
   };
 
-  const handlePositionChange = (id, x, y) => {
-    setSignatureFields((prevFields) =>
-      prevFields.map((field) =>
+  const handlePositionChange = (documentId, id, x, y) => {
+    setSignatureFields((prevFields) => ({
+      ...prevFields,
+      [documentId]: prevFields[documentId].map((field) =>
         field.id === id
           ? {
               ...field,
@@ -176,9 +184,11 @@ const PdfViewer = () => {
               y: y,
             }
           : field
-      )
-    );
+      ),
+    }));
   };
+
+  const currentDocumentId = selectedFiles[currentFileIndex]?.name;
 
   return (
     <Container maxWidth="lg" className={`pdfContainer`}>
@@ -286,17 +296,18 @@ const PdfViewer = () => {
         </IconButton>
       )}
       {/* Renderizar todos los campos de firma basados en el estado */}
-      {signatureFields
-        .filter((field) => field.pageNumber === pageNumber)
-        .map((field) => (
-          <SignatureField
-            key={field.id}
-            initialPosition={{ x: field.x, y: field.y }}
-            onRemove={() => handleRemoveSignatureField(field.id)}
-            onPositionChange={(x, y) => handlePositionChange(field.id, x, y)}
-            backgroundColor={field.backgroundColor} // añadir esto
-          />
-        ))}
+      {currentDocumentId &&
+        signatureFields[currentDocumentId]
+          ?.filter((field) => field.pageNumber === pageNumber)
+          .map((field) => (
+            <SignatureField
+              key={field.id}
+              initialPosition={{ x: field.x, y: field.y }}
+              onRemove={() => handleRemoveSignatureField(currentDocumentId, field.id)}
+              onPositionChange={(x, y) => handlePositionChange(currentDocumentId, field.id, x, y)}
+              backgroundColor={field.backgroundColor}
+            />
+          ))}
     </Container>
   );
 };
