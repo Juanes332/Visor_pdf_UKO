@@ -19,15 +19,18 @@ function getRandomColor() {
 }
 
 const SignatureField = ({ onRemove, initialPosition, onPositionChange, backgroundColor }) => {
+  const savedSignature = localStorage.getItem('signatureImage');
+  const [signatureImage, setSignatureImage] = useState(savedSignature);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [signatureImage, setSignatureImage] = useState(null);
   const [fieldBackground, setFieldBackground] = useState(getRandomColor());
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
   const saveSignature = (signature) => {
     setSignatureImage(signature);
-    setFieldBackground('transparent'); // Cambia el fondo a transparente al guardar la firma
+    // Guardar la firma en el almacenamiento local
+    localStorage.setItem('signatureImage', signature);
+    setFieldBackground('transparent');
   };
 
   const fieldStyle = {

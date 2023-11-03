@@ -82,12 +82,15 @@ const PdfViewer = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [showFileUploader, setShowFileUploader] = useState(true);
   const [selectedDocument, setSelectedDocument] = useState(null);
-  const [showSignatureField, setShowSignatureField] = useState(false);
-  const [signatureFields, setSignatureFields] = useState({});
+  const [signatureFields, setSignatureFields] = useState(
+    JSON.parse(localStorage.getItem('signatureFields')) || {}
+  );
   const [documentNames, setDocumentNames] = useState([]);
   const documentContainerRef = useRef(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  let newSignatureFields = [];
 
   const handleDocumentSelect = (documentIndex) => {
     setSelectedDocument(documentIndex);
@@ -163,6 +166,7 @@ const PdfViewer = () => {
         },
       ],
     }));
+    localStorage.setItem('signatureFields', JSON.stringify(newSignatureFields));
   };
 
   // Función para manejar la eliminación de un campo de firma
@@ -186,6 +190,7 @@ const PdfViewer = () => {
           : field
       ),
     }));
+    localStorage.setItem('signatureFields', JSON.stringify(newSignatureFields));
   };
 
   const currentDocumentId = selectedFiles[currentFileIndex]?.name;
