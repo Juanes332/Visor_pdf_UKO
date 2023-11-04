@@ -50,7 +50,7 @@ const SignatureModal = ({ isOpen, onClose, onSave }) => {
             width: 500,
             height: 200,
             className: 'sigCanvas',
-            onMouseDown: (e) => e.stopPropagation(), // Añade esta línea
+            onMouseDown: (e) => e.stopPropagation(),
           }}
         />
         <div>

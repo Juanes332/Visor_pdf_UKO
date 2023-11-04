@@ -1,22 +1,21 @@
-﻿// SignatureField.js
-import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Rnd } from 'react-rnd';
-import SignatureModal from './SignatureModal'; // Asegúrate de importar el componente
+import SignatureModal from './SignatureModal';
 
-const defaultPosition = {
+let defaultPosition = {
   width: 200,
   height: 50,
 };
 
 // Función para generar un color aleatorio
-function getRandomColor() {
+const getRandomColor = () => {
   const letters = '0123456789ABCDEF';
   let color = '#';
   for (let i = 0; i < 6; i++) {
     color += letters[Math.floor(Math.random() * 16)];
   }
   return color;
-}
+};
 
 const SignatureField = ({
   id,
@@ -30,6 +29,31 @@ const SignatureField = ({
   const [signatureImage, setSignatureImage] = useState(savedSignature);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fieldBackground, setFieldBackground] = useState(getRandomColor());
+  const [size, setSize] = useState({
+    width: defaultPosition.width,
+    height: defaultPosition.height,
+    ...initialPosition,
+  });
+
+  useEffect(() => {
+    const savedSize = localStorage.getItem(`signature-size-${documentId}-${pageNumber}-${id}`);
+    if (savedSize) {
+      setSize(JSON.parse(savedSize));
+    }
+  }, [id, documentId, pageNumber]);
+
+  const onResizeStop = (e, direction, ref, delta, position) => {
+    const newSize = {
+      width: ref.style.width,
+      height: ref.style.height,
+      ...position,
+    };
+    setSize(newSize);
+    localStorage.setItem(
+      `signature-size-${documentId}-${pageNumber}-${id}`,
+      JSON.stringify(newSize)
+    );
+  };
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -47,11 +71,11 @@ const SignatureField = ({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-    backgroundColor: signatureImage ? 'transparent' : fieldBackground, // Usa el color de fondo solo si no hay imagen de firma
-    backgroundImage: `url(${signatureImage})`, // Establecer la imagen de la firma como fondo si está presente
-    backgroundSize: 'contain', // Asegúrate de que la imagen de la firma se ajuste al contenedor
-    backgroundRepeat: 'no-repeat', // No repetir la imagen de fondo
-    backgroundPosition: 'center', // Centrar la imagen de fondo
+    backgroundColor: signatureImage ? 'transparent' : fieldBackground,
+    backgroundImage: `url(${signatureImage})`,
+    backgroundSize: 'contain',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center',
   };
 
   const resizeDotStyle = {
@@ -65,6 +89,8 @@ const SignatureField = ({
 
   return (
     <Rnd
+      size={{ width: size.width, height: size.height }}
+      position={{ x: size.x, y: size.y }}
       default={{
         ...defaultPosition,
         x: initialPosition.x,
@@ -75,7 +101,13 @@ const SignatureField = ({
       minHeight={30.8594}
       maxWidth={380.172}
       maxHeight={200.431}
+      onResizeStop={onResizeStop}
       onDragStop={(e, d) => {
+        setSize((prevSize) => ({ ...prevSize, x: d.x, y: d.y }));
+        localStorage.setItem(
+          `signature-size-${documentId}-${pageNumber}-${id}`,
+          JSON.stringify({ ...size, x: d.x, y: d.y })
+        );
         if (onPositionChange) {
           onPositionChange(d.x, d.y);
         }
@@ -111,7 +143,7 @@ const SignatureField = ({
       </div>
       {isModalOpen && (
         <SignatureModal
-          isOpen={isModalOpen} // Cambia esta línea para que coincida con la propiedad esperada por SignatureModal
+          isOpen={isModalOpen}
           onClose={closeModal}
           onSave={saveSignature}
           existingSignature={signatureImage}

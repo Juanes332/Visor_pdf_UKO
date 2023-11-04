@@ -1,6 +1,7 @@
 ﻿import React, { useState, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { v4 as uuidv4 } from 'uuid';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Grid,
@@ -19,6 +20,7 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import FileUploader from './FileUploader';
 import SignatureField from './SignatureField';
+import ModalFirmaSuccess from './ModalFirmaSuccess';
 
 import './pdf.css';
 
@@ -63,13 +65,13 @@ const useStyles = makeStyles((theme) => ({
   },
   addButton: {
     marginTop: theme.spacing(2),
-    backgroundColor: '#1976D2', // Color de fondo azul
-    color: 'white', // Texto blanco
-    padding: '5px 15px', // Aumentar el padding para hacerlo más rectangular
-    textTransform: 'none', // Evitar que el texto esté en mayúsculas
-    fontSize: '0.8rem', // Tamaño de texto reducido
+    backgroundColor: '#1976D2',
+    color: 'white',
+    padding: '5px 15px',
+    textTransform: 'none',
+    fontSize: '0.8rem',
     '&:hover': {
-      backgroundColor: '#1565C0', // Oscurecer un poco el azul al pasar el ratón por encima
+      backgroundColor: '#1565C0',
     },
   },
 }));
@@ -87,8 +89,19 @@ const PdfViewer = () => {
   );
   const [documentNames, setDocumentNames] = useState([]);
   const documentContainerRef = useRef(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const handleOpenModal = () => {
+    setModalOpen(true);
+  };
+
+  // Función para cerrar el modal
+  const handleCloseModal = () => {
+    setModalOpen(false);
+  };
+  const navigate = useNavigate();
 
   let newSignatureFields = [];
 
@@ -157,8 +170,11 @@ const PdfViewer = () => {
       pageNumber: pageNumber,
       x: 0,
       y: 0,
+      width: 200, // Valor predeterminado para el ancho
+      height: 50, // Valor predeterminado para la altura
       backgroundColor: getRandomColor(),
     };
+
     setSignatureFields((prevFields) => ({
       ...prevFields,
       [documentId]: [...(prevFields[documentId] || []), newField],
@@ -197,7 +213,29 @@ const PdfViewer = () => {
     localStorage.setItem('signatureFields', JSON.stringify(newSignatureFields));
   };
 
+  const handleSizeChange = (documentId, id, width, height) => {
+    setSignatureFields((prevFields) => ({
+      ...prevFields,
+      [documentId]: prevFields[documentId].map((field) =>
+        field.id === id
+          ? {
+              ...field,
+              width,
+              height,
+            }
+          : field
+      ),
+    }));
+    localStorage.setItem('signatureFields', JSON.stringify(signatureFields));
+  };
+
   const currentDocumentId = selectedFiles[currentFileIndex]?.name;
+
+  const navigateHome = () => {
+    handleCloseModal();
+    navigate('/dashboard/firmaya'); // Navega al 'home' que sería la ruta raíz
+    handleBackToUploader();
+  };
 
   return (
     <Container maxWidth="lg" className={`pdfContainer`}>
@@ -285,13 +323,34 @@ const PdfViewer = () => {
                   })}
                 </List>
               </Paper>
-              <Button
-                onClick={handleAddSignatureField}
-                variant="contained"
-                className={classes.addButton}
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  width: '100%',
+                }}
               >
-                Agregar campo de firma
-              </Button>
+                <Button
+                  onClick={handleAddSignatureField}
+                  variant="contained"
+                  className={classes.addButton}
+                >
+                  Agregar campo de firma
+                </Button>
+                <Button
+                  onClick={handleOpenModal}
+                  variant="contained"
+                  style={{
+                    marginTop: '40px',
+                    fontSize: '1.1rem',
+                    backgroundColor: '#FF8C00',
+                    color: '#ffffff',
+                  }}
+                >
+                  Firmar
+                </Button>
+              </div>
             </Grid>
           )}
         </Grid>
@@ -315,11 +374,20 @@ const PdfViewer = () => {
               documentId={currentDocumentId}
               pageNumber={pageNumber}
               initialPosition={{ x: field.x, y: field.y }}
+              size={{ width: field.width, height: field.height }}
               onRemove={() => handleRemoveSignatureField(currentDocumentId, field.id)}
               onPositionChange={(x, y) => handlePositionChange(currentDocumentId, field.id, x, y)}
+              onSizeChange={(width, height) =>
+                handleSizeChange(currentDocumentId, field.id, width, height)
+              }
               backgroundColor={field.backgroundColor}
             />
           ))}
+      <ModalFirmaSuccess
+        open={modalOpen}
+        handleClose={handleCloseModal}
+        navigateHome={navigateHome}
+      />
     </Container>
   );
 };
