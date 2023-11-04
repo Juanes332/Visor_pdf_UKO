@@ -18,8 +18,15 @@ function getRandomColor() {
   return color;
 }
 
-const SignatureField = ({ onRemove, initialPosition, onPositionChange, backgroundColor }) => {
-  const savedSignature = localStorage.getItem('signatureImage');
+const SignatureField = ({
+  id,
+  documentId,
+  pageNumber,
+  onRemove,
+  initialPosition,
+  onPositionChange,
+}) => {
+  const savedSignature = localStorage.getItem(`signature-${documentId}-${pageNumber}-${id}`);
   const [signatureImage, setSignatureImage] = useState(savedSignature);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fieldBackground, setFieldBackground] = useState(getRandomColor());
@@ -28,8 +35,7 @@ const SignatureField = ({ onRemove, initialPosition, onPositionChange, backgroun
   const closeModal = () => setIsModalOpen(false);
   const saveSignature = (signature) => {
     setSignatureImage(signature);
-    // Guardar la firma en el almacenamiento local
-    localStorage.setItem('signatureImage', signature);
+    localStorage.setItem(`signature-${documentId}-${pageNumber}-${id}`, signature);
     setFieldBackground('transparent');
   };
 
@@ -65,18 +71,22 @@ const SignatureField = ({ onRemove, initialPosition, onPositionChange, backgroun
         y: initialPosition.y,
       }}
       bounds=".documentContainer"
+      minWidth={32.1094}
+      minHeight={30.8594}
+      maxWidth={380.172}
+      maxHeight={200.431}
       onDragStop={(e, d) => {
         if (onPositionChange) {
           onPositionChange(d.x, d.y);
         }
       }}
       enableResizing={{
-        topLeft: true, // Permitir cambiar tamaño desde la esquina superior izquierda
-        topRight: true, // Permitir cambiar tamaño desde la esquina superior derecha
-        bottomLeft: true, // Permitir cambiar tamaño desde la esquina inferior izquierda
-        bottomRight: true, // Permitir cambiar tamaño desde la esquina inferior derecha
+        topLeft: true,
+        topRight: true,
+        bottomLeft: true,
+        bottomRight: true,
       }}
-      lockAspectRatio={true} // Mantener la relación de aspecto al cambiar el tamaño
+      lockAspectRatio={true}
     >
       <div style={{ ...fieldStyle, border: '1px solid #007bff' }} onDoubleClick={openModal}>
         {!signatureImage && <span>Signature</span>}
@@ -99,7 +109,14 @@ const SignatureField = ({ onRemove, initialPosition, onPositionChange, backgroun
         <div style={{ ...resizeDotStyle, bottom: '-5px', left: '-5px' }} />
         <div style={{ ...resizeDotStyle, bottom: '-5px', right: '-5px' }} />
       </div>
-      <SignatureModal isOpen={isModalOpen} onClose={closeModal} onSave={saveSignature} />
+      {isModalOpen && (
+        <SignatureModal
+          isOpen={isModalOpen} // Cambia esta línea para que coincida con la propiedad esperada por SignatureModal
+          onClose={closeModal}
+          onSave={saveSignature}
+          existingSignature={signatureImage}
+        />
+      )}
     </Rnd>
   );
 };

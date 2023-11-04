@@ -151,22 +151,26 @@ const PdfViewer = () => {
   };
 
   const handleAddSignatureField = () => {
-    const documentId = selectedFiles[currentFileIndex].name; // Usamos el nombre del archivo como ID
+    const documentId = selectedFiles[currentFileIndex].name;
+    const newField = {
+      id: uuidv4(),
+      pageNumber: pageNumber,
+      x: 0,
+      y: 0,
+      backgroundColor: getRandomColor(),
+    };
     setSignatureFields((prevFields) => ({
       ...prevFields,
-      [documentId]: [
-        ...(prevFields[documentId] || []),
-        {
-          id: uuidv4(),
-          pageNumber: pageNumber,
-          x: 0,
-          y: 0,
-          backgroundColor: getRandomColor(),
-          signature: null,
-        },
-      ],
+      [documentId]: [...(prevFields[documentId] || []), newField],
     }));
-    localStorage.setItem('signatureFields', JSON.stringify(newSignatureFields));
+    // Guardamos el nuevo estado en el localStorage
+    localStorage.setItem(
+      'signatureFields',
+      JSON.stringify({
+        ...signatureFields,
+        [documentId]: [...(signatureFields[documentId] || []), newField],
+      })
+    );
   };
 
   // Función para manejar la eliminación de un campo de firma
@@ -307,6 +311,9 @@ const PdfViewer = () => {
           .map((field) => (
             <SignatureField
               key={field.id}
+              id={field.id}
+              documentId={currentDocumentId}
+              pageNumber={pageNumber}
               initialPosition={{ x: field.x, y: field.y }}
               onRemove={() => handleRemoveSignatureField(currentDocumentId, field.id)}
               onPositionChange={(x, y) => handlePositionChange(currentDocumentId, field.id, x, y)}
