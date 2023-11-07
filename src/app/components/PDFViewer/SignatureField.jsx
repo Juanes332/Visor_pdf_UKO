@@ -34,6 +34,7 @@ const SignatureField = ({
     height: defaultPosition.height,
     ...initialPosition,
   });
+  const [lastTap, setLastTap] = useState(null);
 
   useEffect(() => {
     const savedSize = localStorage.getItem(`signature-size-${documentId}-${pageNumber}-${id}`);
@@ -42,10 +43,20 @@ const SignatureField = ({
     }
   }, [id, documentId, pageNumber]);
 
+  const handleDoubleTap = (e) => {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300; // Tiempo en milisegundos, ajustar si es necesario
+    if (lastTap && now - lastTap < DOUBLE_TAP_DELAY) {
+      openModal();
+    } else {
+      setLastTap(now);
+    }
+  };
+
   const onResizeStop = (e, direction, ref, delta, position) => {
     const newSize = {
-      width: ref.style.width,
-      height: ref.style.height,
+      width: ref.offsetWidth,
+      height: ref.offsetHeight,
       ...position,
     };
     setSize(newSize);
@@ -87,6 +98,28 @@ const SignatureField = ({
     borderRadius: '50%', // Hace que tenga forma circular
   };
 
+  const removeButtonStyle = {
+    position: 'absolute',
+    right: '30px', // Adjusted to give space next to the resize handle
+    top: '-15px',
+    zIndex: 100,
+    background: 'red',
+    color: 'white',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '2px 6px',
+    borderRadius: '50%',
+    fontSize: '12px',
+    lineHeight: '14px',
+    textAlign: 'center',
+    height: '20px',
+    width: '20px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+  };
+
   return (
     <Rnd
       size={{ width: size.width, height: size.height }}
@@ -103,10 +136,11 @@ const SignatureField = ({
       maxHeight={200.431}
       onResizeStop={onResizeStop}
       onDragStop={(e, d) => {
-        setSize((prevSize) => ({ ...prevSize, x: d.x, y: d.y }));
+        const newSize = { ...size, x: d.x, y: d.y };
+        setSize(newSize);
         localStorage.setItem(
           `signature-size-${documentId}-${pageNumber}-${id}`,
-          JSON.stringify({ ...size, x: d.x, y: d.y })
+          JSON.stringify(newSize)
         );
         if (onPositionChange) {
           onPositionChange(d.x, d.y);
@@ -120,22 +154,20 @@ const SignatureField = ({
       }}
       lockAspectRatio={true}
     >
-      <div style={{ ...fieldStyle, border: '1px solid #007bff' }} onDoubleClick={openModal}>
+      <div style={fieldStyle} onDoubleClick={openModal} onTouchEnd={handleDoubleTap}>
         {!signatureImage && <span>Signature</span>}
         <button
-          style={{
-            position: 'absolute',
-            right: 0,
-            top: 0,
-            background: 'red',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer',
-          }}
+          style={removeButtonStyle}
           onClick={onRemove}
+          onTouchEnd={(e) => {
+            // Evita la propagación para que no dispare otros eventos de toque no deseados.
+            e.stopPropagation();
+            onRemove();
+          }}
         >
           X
         </button>
+        {/* Resize Handles */}
         <div style={{ ...resizeDotStyle, top: '-5px', left: '-5px' }} />
         <div style={{ ...resizeDotStyle, top: '-5px', right: '-5px' }} />
         <div style={{ ...resizeDotStyle, bottom: '-5px', left: '-5px' }} />
